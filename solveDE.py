@@ -9,10 +9,11 @@ class SolveWithDE:
     def __init__(self):
         self.org = list()
         self.board = list()
-        self.generation = 10000
+        self.generation = 30000
         self.p_count = 100
-        self.result = list()
         self.filledList = list()
+        self.retain=0.10
+        
 
     def replace(self, filledList):
         myList = [["" for col in range(9)] for row in range(9)]
@@ -120,26 +121,27 @@ class SolveWithDE:
             v3 = np.array(pop[p3])
 
             difference = v2 - v1
-            v3 = v3 + 3 * difference
-            mutate = np.full((9, 9), 0)
+            mutate = v3 + 3 * difference
+            trial = np.full((9, 9), 0)
 
             for i in range(9):
                 for j in range(9):
                     if (CR > random()):
-                        mutate[i][j] = v3[i][j]
+                        trial[i][j] = mutate[i][j]
                     else:
-                        mutate[i][j] = individual[i][j]
+                        trial[i][j] = individual[i][j]
 
-            f1 = self.fitness(mutate)
+            f1 = self.fitness(trial)
             f2 = self.fitness(individual)
             if (f1 < f2):
-                next_generation.append(mutate)
+                next_generation.append(trial)
             else:
                 next_generation.append(individual)
 
         if ((k + 1) % 100 == 0):
             print("resolve !!!!!!!!!!!!!!!")
             next_generation = self.resolve(next_generation)
+            
         return next_generation
 
     
@@ -147,63 +149,54 @@ class SolveWithDE:
         self.org = self.replace(filledList)
         self.filledList = filledList
         self.board = board
-        self.result = filledList
-        start = datetime.now()
-        print(start)
+        self.start = datetime.now()
+        print(self.start)
         p1 = self.population()
         m = 81
         fitest = []
         history = []
-
         for i in range(self.generation):
+            if (i % 100 == 0):
+                for ind in p1:
+                    x = self.fitness(ind)
+                    if (x < m):
+                        m = x
+                        fitest = ind
+                print("-----------")
+                print(m)
+                print("-----------")
+                if (m == 0):
+                    print(" we end in "+str(i)+" iteration")
+                    break
+                
+            if (i % 1000 == 0):
+                print("we in iteration " + str(i))
+                if m in history:
 
+                    graded = [(self.fitness(x), x) for x in p1]
+                    graded.sort(key=lambda x: x[0])
+                    graded = [x[1] for x in graded]
+                    retain_length = int(len(graded) * self.retain)
+                    parents = graded[:retain_length]
+                    
+                    p1 = self.population()
+                    
+                    for s in range(retain_length):
+                        p1[randint(0, self.p_count - 1)] = parents[s]
+                        history = []
+                else:
+                    history.append(m)
             p1 = self.evolve(p1,i)
             print(self.grade(p1))
 
-            if (i % (self.generation // 10) == 0):
-                print("we in iteration " + str(i))
+            
 
-                for i in p1:
-                    x = self.fitness(i)
-                    if (x < m):
-                        m = x
-                        fitest = i
-                        
-                if (m == 0):
-                    stop = datetime.now()
-                    time = stop - start
-                    print(time)
-                    self.showResult(fitest)
-                    break
-
-                if m in history:
-                    p1 = self.population()
-                    for s in range(10):
-                        p1[randint(0, self.p_count  - 1)] = fitest
-                    history = []
-                else:
-                    history.append(m)
+                
 
         stop = datetime.now()
-        time = stop - start
+        time = stop - self.start
         print(time)
 
-        """print("--------------------------------------------------")
-        print("--------------------------------------------------")
-        print("--------------------------------------------------")
-
-        print(m)
-        print()
-        print(fitest)
-
-        print("--------------------------------------------------")
-        print("--------------------------------------------------")
-        print("--------------------------------------------------")
-
-        for i in history:
-            print(i)
-        stop=datetime.now()
-        time=stop-start
-        print(time)"""
+        
 
         self.showResult(fitest)

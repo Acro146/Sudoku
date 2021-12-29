@@ -1,13 +1,13 @@
 class SolveWithBT():
 
     boardProperties = list()
-#    it = 0
+    #it = 0
     def solve(self ,filledBoard ,board):    
         self.boardProperties = board
         self.backtrack(filledBoard)
-#        print("\n Solved in " + str(self.it) + " iterations") 
+     #   print("\n Solved in " + str(self.it) + " iterations") 
     def backtrack(self, filledBoard):
-#        self.it += 1
+      #  self.it += 1
         ceil = self.nextEmpty(filledBoard)
         if not ceil:
             return True
